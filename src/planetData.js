@@ -8,7 +8,7 @@ const randomColor = () => `rgb(${randomInt(80, 50)}, ${randomInt(80, 50)}, ${ran
 
 //create an array of random planets
 const planetData = [];
-const totalPlanets = 1;
+const totalPlanets = 2;
 for (let index = 0; index < totalPlanets; index++) {
   planetData.push({
     id: index,
