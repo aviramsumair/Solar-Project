@@ -1,7 +1,7 @@
 //import all the things
 import React, { Suspense, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls, Html, useBounds, Bounds, Line } from "@react-three/drei";
+import { OrbitControls, Html, useBounds, Bounds } from "@react-three/drei";
 import * as THREE from "three";
 import planetData from "./planetData";
 import "./styles.css";
@@ -13,7 +13,7 @@ export default function App() {
       <Canvas camera={{ position: [0, 20, 25], fov: 45 }}>
         <Suspense fallback={null}>
           {/* set the zoom level when you click on a body*/}
-          <Bounds fit clip observe margin={1.2}>
+          <Bounds fit clip observe margin={1.4}>
           {/* wrap all the objects in here with the on click zoom effect */}
             <SelectToZoom>
               <Sun />
@@ -47,7 +47,7 @@ function Lights() {
 //Make the Sun 
 function Sun() {
   return (
-    <mesh onClick={ () => {console.log("Sun was clicked")}}>
+    <mesh>
       <sphereGeometry args={[6, 32, 32]} />
       {/* we use basic material so we dont have to light it with global illumniation */}
       <meshBasicMaterial color="#E1DC59" />
@@ -81,17 +81,19 @@ function Planet({ planet: { color, xRadius, zRadius, size, speed, offset, name, 
 
   return (
     <>
-      <mesh ref={planetRef} onClick={()=>{console.log('body was click')}}>  
+      <mesh ref={planetRef}>  
         {/* create the planet based on the info that it is given from the planet array */}
         <sphereGeometry args={[size, 32, 32]} />
         <meshStandardMaterial color={color} />
         {/* adds the HTML element that holds the name of the body */}
         <Html>
-          <div className="annotation"> {name} </div>
+          <div className="planetAnnotation"> {name} </div>
         </Html>
       </mesh>
-      {/* adds the moon to the planet element  and we pass it it's planet's position */}
-      <Moons moon={moons} planetRef={planetRef} planetXPostion={planetXPostion} planetZPostion={planetZPostion}/>
+      {/* maps over the planet's moon arary and adds the moon to the planet and then pass it it's planet's position */}
+      {moons.map((moon) => (              
+        <Moons moon={moon} planetRef={planetRef} planetXPostion={planetXPostion} planetZPostion={planetZPostion}/>
+      ))}
     </>
   );
 }
@@ -117,7 +119,7 @@ function Moons({ moon: { moonColor, moonXRadius, moonZRadius, moonSize, moonSpee
           <meshStandardMaterial color={moonColor} />
           {/* adds the name tag to the moon */}
           <Html>
-            <div className="annotation"> {moonName} </div>
+            <div className="moonAnnotation"> {moonName} </div>
           </Html>
         </mesh>
         {/* we create the orbit line for the moon based on the info from we get passed in */}
@@ -148,7 +150,7 @@ function Ecliptic({ xRadius, zRadius, color, planetXPostion, planetZPostion }) {
   const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
   //we check to see if there is a planetXPostion, if there isn't we know that we are a plaent and then just draw the orbit line 
   //based on the planet info. If there is a planetXPostion, we know that we are a moon, and as such, we factor in the 
-  //planets X and Z positons so we center the moon's orbit arounf the planet and not the moon
+  //planets X and Z positons so we center the moon's orbit around the planet and not the moon
   if (planetXPostion === undefined){
     return (
       <line geometry={lineGeometry}>
@@ -158,7 +160,7 @@ function Ecliptic({ xRadius, zRadius, color, planetXPostion, planetZPostion }) {
   }
   else{
     return (
-      <line geometry={lineGeometry} position={[planetXPostion, 0, planetZPostion]}>
+      <line geometry={lineGeometry} position={[planetXPostion, 0, planetZPostion]} >
         <lineBasicMaterial attach="material" color={color} linewidth={.1} />
       </line>
     );
@@ -170,19 +172,19 @@ function SelectToZoom({ children }) {
   const api = useBounds()
   return (
     <group 
-      onClick={(e) => {        
-        if(e.object.type !== Line) {                 
-          ( e.delta <= 2 && api.refresh(e.object).fit())
-          console.log("type of object clicked is " + e.object.type)
+      onClick={(e) => {      
+        //after we click we check through all the objects that is under the click. We look for the first object that is
+        //not a line. We then zoom on on that object to fit the screen based on the margin number in Bounds in App
+        if(e.object.type !== "Line") {                 
+          ( e.delta <= 2 && api.refresh(e.object).fit())   
+          //once we find the first object that is not a line, we stop looking for any other objects behind it       
           e.stopPropagation()
         }
-        else{
-          return
-        }
       }}
+      //if we miss and dont hit antthing with our click, we move the camera to fit all the objects
+      //so showing the whole solar system
       onPointerMissed={(e) => {
         e.button === 0 && api.refresh().fit()
-        console.log("miss click")
       }}
       >
       {children}

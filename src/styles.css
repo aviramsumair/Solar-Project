@@ -13,7 +13,7 @@ body {
   background-color: #262626;
 }
 
-.annotation {
+.planetAnnotation {
   transform: translate3d(-50%, -200%, 0);
   text-align: center;
   background: #7c7c7c;
@@ -21,4 +21,14 @@ body {
   padding: 2px;
   border-radius: 2px;
   font-size: 1rem;
+}
+
+.moonAnnotation {
+  transform: translate3d(-50%, -200%, 0);
+  text-align: center;
+  background: #7c7c7c;
+  color: rgb(7, 6, 20);
+  padding: 2px;
+  border-radius: 2px;
+  font-size: .5rem;
 }
