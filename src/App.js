@@ -3,28 +3,40 @@ import React, { Suspense, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Html, useBounds, Bounds } from "@react-three/drei";
 import * as THREE from "three";
+import TopBar from "./TopBar";
 import planetData from "./planetData";
 import "./styles.css";
 
 //makes our baby
 export default function App() {
+
+  //states used to show/hide the planet and moon names 
+  const [showPlanetNames, setShowPlanetNames] = useState(true)
+  const [hideMoonNames, setHideMoonNames] = useState(false)
+
+
+
   return (
     <>
-      <Canvas camera={{ position: [0, 20, 25], fov: 45 }}>
+      <TopBar hideMoonNames={hideMoonNames} setHideMoonNames={setHideMoonNames} showPlanetNames={showPlanetNames} setShowPlanetNames={setShowPlanetNames}/>
+      <Canvas camera={{ position: [0, 20, 25], fov: 55 }}>
         <Suspense fallback={null}>
           {/* set the zoom level when you click on a body*/}
-          <Bounds fit clip observe margin={1.4}>
+          <Bounds
+  ////      //the bounds settings are causing it to show the whole system when we click any button so need to look into that   
+            //fit clip observe margin={1.8}
+          >
           {/* wrap all the objects in here with the on click zoom effect */}
             <SelectToZoom>
               <Sun />
               {/* Create all the plaents */}
               {planetData.map((planet) => (                
-                <Planet planet={planet} key={planet.id} />
+                <Planet planet={planet} key={planet.id} showPlanetNames={showPlanetNames} hideMoonNames={hideMoonNames}/>
               ))}
             </SelectToZoom>
           </Bounds>
         </Suspense> 
-        {/* Draw all the orbit lines outside of the bodies so we dont add a click event to them*/}
+        {/* Draw all the orbit lines outside of the bodies because we dont need to add any functionality on them*/}
         {planetData.map((planet) => (          
           <Ecliptic key={planet.id} xRadius={planet.xRadius} zRadius={planet.zRadius} color={planet.color}/>          
         ))}
@@ -48,18 +60,20 @@ function Lights() {
 function Sun() {
   return (
     <mesh>
-      <sphereGeometry args={[6, 32, 32]} />
+      <sphereGeometry args={[8, 32, 32]} />
       {/* we use basic material so we dont have to light it with global illumniation */}
       <meshBasicMaterial color="#E1DC59" />
     </mesh>
   );
 }
 
+
+
 //creates the planet based on the given info and passes in the planet's moon array 
-function Planet({ planet: { color, xRadius, zRadius, size, speed, offset, name, id, moons} }) {
+function Planet({ planet: { color, xRadius, zRadius, size, speed, offset, name, id, moons}, showPlanetNames, hideMoonNames}) {
   //create a reference to the mesh using React’s useRef hook
   const planetRef = React.useRef();    
- //create a state to hold the planets X and Z positions to pass to the moons to calculate thier offsets
+  //create a state to hold the planets X and Z positions to pass to the moons to calculate thier offsets
   const [planetXPostion, setPlanetXPostion] = useState(0)
   const [planetZPostion, setPlanetZPostion] = useState(0)
 
@@ -79,6 +93,9 @@ function Planet({ planet: { color, xRadius, zRadius, size, speed, offset, name, 
     setPlanetZPostion(z)    
   }); 
 
+  //decides what class we should use for the name of the div that we use for the name to show or hide it
+  const planetAnnotationClass = showPlanetNames ? "planetAnnotation" : "annotationHide"
+
   return (
     <>
       <mesh ref={planetRef}>  
@@ -87,19 +104,22 @@ function Planet({ planet: { color, xRadius, zRadius, size, speed, offset, name, 
         <meshStandardMaterial color={color} />
         {/* adds the HTML element that holds the name of the body */}
         <Html>
-          <div className="planetAnnotation"> {name} </div>
+          <div className={planetAnnotationClass}> {name} </div>
         </Html>
       </mesh>
       {/* maps over the planet's moon arary and adds the moon to the planet and then pass it it's planet's position */}
       {moons.map((moon) => (              
-        <Moons moon={moon} planetRef={planetRef} planetXPostion={planetXPostion} planetZPostion={planetZPostion}/>
+        <Moons key={moon.id} moon={moon} planetRef={planetRef} planetXPostion={planetXPostion} planetZPostion={planetZPostion} hideMoonNames={hideMoonNames}/>
       ))}
     </>
   );
 }
 
+
+
+
 //creates the moon and it's orbit line from the given info about that moon 
-function Moons({ moon: { moonColor, moonXRadius, moonZRadius, moonSize, moonSpeed, moonOffset, moonName, moonId}, planetXPostion, planetZPostion }) {    
+function Moons({ moon: { moonColor, moonXRadius, moonZRadius, moonSize, moonSpeed, moonOffset, moonName, moonId}, planetXPostion, planetZPostion, hideMoonNames}) {    
   //create a reference to the mesh using React’s useRef hook
   const moonRef = React.useRef()
   //moves the moon in the same way we move the plaents
@@ -111,21 +131,24 @@ function Moons({ moon: { moonColor, moonXRadius, moonZRadius, moonSize, moonSpee
     moonRef.current.position.z = (moonZRadius * Math.cos(t)) + planetZPostion; 
   }); 
 
-    return(
-      <>
-        <mesh ref={moonRef}>
-          {/* builds the moon based on the info that it recives */}
-          <sphereGeometry args={[moonSize, 32, 32]} />
-          <meshStandardMaterial color={moonColor} />
-          {/* adds the name tag to the moon */}
-          <Html>
-            <div className="moonAnnotation"> {moonName} </div>
-          </Html>
-        </mesh>
-        {/* we create the orbit line for the moon based on the info from we get passed in */}
-        <Ecliptic xRadius={moonXRadius} zRadius={moonZRadius} color={moonColor} planetXPostion={planetXPostion} planetZPostion={planetZPostion}/>
-      </>
-    )
+  //decides what class we should use for the name of the div that we use for the name to show or hide it
+  const moonAnnotationClass = hideMoonNames ? "annotationHide" : "moonAnnotation"
+
+  return(
+    <>
+      <mesh ref={moonRef}>
+        {/* builds the moon based on the info that it recives */}
+        <sphereGeometry args={[moonSize, 32, 32]} />
+        <meshStandardMaterial color={moonColor} />
+        {/* adds the name tag to the moon */}
+        <Html>
+          <div className={moonAnnotationClass}> {moonName} </div>
+        </Html>
+      </mesh>
+      {/* we create the orbit line for the moon based on the info from we get passed in */}
+      <Ecliptic xRadius={moonXRadius} zRadius={moonZRadius} color={moonColor} planetXPostion={planetXPostion} planetZPostion={planetZPostion}/>
+    </>
+  )
 }
 
 
@@ -181,11 +204,11 @@ function SelectToZoom({ children }) {
           e.stopPropagation()
         }
       }}
-      //if we miss and dont hit antthing with our click, we move the camera to fit all the objects
+      //if we  dont hit anything with our click, we move the camera to fit all the objects
       //so showing the whole solar system
-      onPointerMissed={(e) => {
-        e.button === 0 && api.refresh().fit()
-      }}
+      // onPointerMissed={(e) => {
+      //   e.button === 0 && api.refresh().fit()
+      // }}
       >
       {children}
     </group>
