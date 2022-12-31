@@ -15,10 +15,16 @@ body {
 
 .mainHeader{
   background: #d9d6d6;
-  height: 5vh;
+  height: 8vh;
   display: flex;
   justify-content: right;
   align-items: center;
+}
+
+.speedSlider{
+  margin-top: 8px;
+  width: 30vw;
+  text-align: center;
 }
 
 .settingsButton{

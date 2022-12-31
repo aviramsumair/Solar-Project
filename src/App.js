@@ -6,6 +6,11 @@ import * as THREE from "three";
 import TopBar from "./TopBar";
 import planetData from "./planetData";
 import "./styles.css";
+import '@fontsource/roboto/300.css';
+import '@fontsource/roboto/400.css';
+import '@fontsource/roboto/500.css';
+import '@fontsource/roboto/700.css';
+
 
 //makes our baby
 export default function App() {
@@ -13,12 +18,19 @@ export default function App() {
   //states used to show/hide the planet and moon names 
   const [showPlanetNames, setShowPlanetNames] = useState(true)
   const [hideMoonNames, setHideMoonNames] = useState(false)
-
-
+  //state to keep track of the slider value that governs the speed of the simuation 
+  const [sliderValue, setSliderValue] = useState(30)
 
   return (
     <>
-      <TopBar hideMoonNames={hideMoonNames} setHideMoonNames={setHideMoonNames} showPlanetNames={showPlanetNames} setShowPlanetNames={setShowPlanetNames}/>
+      <TopBar 
+        hideMoonNames={hideMoonNames} 
+        setHideMoonNames={setHideMoonNames} 
+        showPlanetNames={showPlanetNames} 
+        setShowPlanetNames={setShowPlanetNames}
+        sliderValue={sliderValue}
+        setSliderValue={setSliderValue}
+      />
       <Canvas camera={{ position: [0, 20, 25], fov: 55 }}>
         <Suspense fallback={null}>
           {/* set the zoom level when you click on a body*/}
@@ -31,7 +43,12 @@ export default function App() {
               <Sun />
               {/* Create all the plaents */}
               {planetData.map((planet) => (                
-                <Planet planet={planet} key={planet.id} showPlanetNames={showPlanetNames} hideMoonNames={hideMoonNames}/>
+                <Planet 
+                  planet={planet} 
+                  key={planet.id} 
+                  showPlanetNames={showPlanetNames} 
+                  hideMoonNames={hideMoonNames} 
+                  sliderValue={sliderValue}/>
               ))}
             </SelectToZoom>
           </Bounds>
@@ -50,7 +67,8 @@ export default function App() {
 //creats the lights for the scene 
 function Lights() {
   return (
-    <>      
+    <>
+      {/* creates a point light at the center of the system (where the sun is) to act as the light from the sun */}
       <pointLight position={[0, 0, 0]} intensity={3}/>
     </>
   );
@@ -70,7 +88,7 @@ function Sun() {
 
 
 //creates the planet based on the given info and passes in the planet's moon array 
-function Planet({ planet: { color, xRadius, zRadius, size, speed, offset, name, id, moons}, showPlanetNames, hideMoonNames}) {
+function Planet({ planet: { color, xRadius, zRadius, size, speed, offset, name, id, moons}, showPlanetNames, hideMoonNames, sliderValue}) {
   //create a reference to the mesh using React’s useRef hook
   const planetRef = React.useRef();    
   //create a state to hold the planets X and Z positions to pass to the moons to calculate thier offsets
@@ -82,7 +100,7 @@ function Planet({ planet: { color, xRadius, zRadius, size, speed, offset, name, 
   useFrame(({ clock }) => {
     //get the time differnece between each frame then add the speed speed of the planet to figure out how much we should 
     //move the planet since the last frame was called
-    const t = clock.getElapsedTime() * (speed * 0) + offset;
+    const t = clock.getElapsedTime() * (speed * (sliderValue * 0.01)) + offset;
     //gets the new X and Z postion based on the change in time and its speed 
     const x = xRadius * Math.sin(t);
     const z = zRadius * Math.cos(t);
@@ -109,7 +127,7 @@ function Planet({ planet: { color, xRadius, zRadius, size, speed, offset, name, 
       </mesh>
       {/* maps over the planet's moon arary and adds the moon to the planet and then pass it it's planet's position */}
       {moons.map((moon) => (              
-        <Moons key={moon.id} moon={moon} planetRef={planetRef} planetXPostion={planetXPostion} planetZPostion={planetZPostion} hideMoonNames={hideMoonNames}/>
+        <Moons key={moon.id} moon={moon} planetRef={planetRef} planetXPostion={planetXPostion} planetZPostion={planetZPostion} hideMoonNames={hideMoonNames} sliderValue={sliderValue}/>
       ))}
     </>
   );
@@ -119,12 +137,12 @@ function Planet({ planet: { color, xRadius, zRadius, size, speed, offset, name, 
 
 
 //creates the moon and it's orbit line from the given info about that moon 
-function Moons({ moon: { moonColor, moonXRadius, moonZRadius, moonSize, moonSpeed, moonOffset, moonName, moonId}, planetXPostion, planetZPostion, hideMoonNames}) {    
+function Moons({ moon: { moonColor, moonXRadius, moonZRadius, moonSize, moonSpeed, moonOffset, moonName, moonId}, planetXPostion, planetZPostion, hideMoonNames, sliderValue}) {    
   //create a reference to the mesh using React’s useRef hook
   const moonRef = React.useRef()
   //moves the moon in the same way we move the plaents
   useFrame(({ clock }) => {
-    const t = clock.getElapsedTime() * (moonSpeed * 0) + moonOffset;
+    const t = clock.getElapsedTime() * (moonSpeed * (sliderValue * 0.04)) + moonOffset;
     //we add in the planet's location so we can use it to offset the moons rotation to rotate around
     //the planet's center and not the Sun's center
     moonRef.current.position.x = (moonXRadius * Math.sin(t)) + planetXPostion;

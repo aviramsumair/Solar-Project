@@ -1,7 +1,10 @@
-import React from "react";
+import {React, useState} from "react";
+import Slider from '@mui/material/Slider';
 
 
-export default function TopBar({hideMoonNames, setHideMoonNames, showPlanetNames, setShowPlanetNames}){
+export default function TopBar({hideMoonNames, setHideMoonNames, showPlanetNames, setShowPlanetNames, sliderValue, setSliderValue}){
+
+    
 
     function planetNameButtonClick(){
         setShowPlanetNames(!showPlanetNames)
@@ -11,18 +14,16 @@ export default function TopBar({hideMoonNames, setHideMoonNames, showPlanetNames
         setHideMoonNames(!hideMoonNames)
     }
 
-    function sliderValue(){
-        console.log("hi")
-    }
+    function handleChange(event, newValue){
+        setSliderValue(newValue);
+      };
 
     return(
         <div className="mainHeader">
-            <div>
-                <h1>Welcome To The Solar Project</h1>
-            </div>            
-            <div id="planetSliderContainer">
-                <input id="planetSpeedSlider" type="range" mins="0" max="10" onChange={()=>sliderValue}></input>          
-            </div>
+             <div className="speedSlider">
+                <label>Simulation Speed</label>
+                <Slider value={sliderValue}  valueLabelDisplay={'auto'} onChange={handleChange} />
+            </div>                       
             <button className="settingsButton" onClick={planetNameButtonClick}>{showPlanetNames ? "Hide" : "Show"} Planet Names</button>            
             <button className="settingsButton" onClick={moonNameButtonClick}>{hideMoonNames ? "Show" : "Hide"} Moon Names</button>
         </div>
