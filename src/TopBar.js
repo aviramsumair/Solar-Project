@@ -17,7 +17,9 @@ export default function TopBar({hideMoonNames, setHideMoonNames, showPlanetNames
 
     return(
         <div className="mainHeader">
-            
+            <div>
+                <h1>Welcome To The Solar Project</h1>
+            </div>            
             <div id="planetSliderContainer">
                 <input id="planetSpeedSlider" type="range" mins="0" max="10" onChange={()=>sliderValue}></input>          
             </div>
