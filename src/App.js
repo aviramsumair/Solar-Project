@@ -6,10 +6,6 @@ import * as THREE from "three";
 import TopBar from "./TopBar";
 import planetData from "./planetData";
 import "./styles.css";
-import '@fontsource/roboto/300.css';
-import '@fontsource/roboto/400.css';
-import '@fontsource/roboto/500.css';
-import '@fontsource/roboto/700.css';
 
 
 //makes our baby
@@ -19,7 +15,7 @@ export default function App() {
   const [showPlanetNames, setShowPlanetNames] = useState(true)
   const [hideMoonNames, setHideMoonNames] = useState(false)
   //state to keep track of the slider value that governs the speed of the simuation 
-  const [sliderValue, setSliderValue] = useState(30)
+  const [sliderValue, setSliderValue] = useState(0)
 
   return (
     <>
@@ -90,7 +86,8 @@ function Sun() {
 //creates the planet based on the given info and passes in the planet's moon array 
 function Planet({ planet: { color, xRadius, zRadius, size, speed, offset, name, id, moons}, showPlanetNames, hideMoonNames, sliderValue}) {
   //create a reference to the mesh using React’s useRef hook
-  const planetRef = React.useRef();    
+  const planetRef = React.useRef(); 
+  
   //create a state to hold the planets X and Z positions to pass to the moons to calculate thier offsets
   const [planetXPostion, setPlanetXPostion] = useState(0)
   const [planetZPostion, setPlanetZPostion] = useState(0)
@@ -125,15 +122,45 @@ function Planet({ planet: { color, xRadius, zRadius, size, speed, offset, name, 
           <div className={planetAnnotationClass}> {name} </div>
         </Html>
       </mesh>
+      {/* adds rings to a planet */}
+      <Rings 
+        planetXPostion={planetXPostion} 
+        planetZPostion={planetZPostion} 
+        size={size} color={color}
+      />
       {/* maps over the planet's moon arary and adds the moon to the planet and then pass it it's planet's position */}
       {moons.map((moon) => (              
-        <Moons key={moon.id} moon={moon} planetRef={planetRef} planetXPostion={planetXPostion} planetZPostion={planetZPostion} hideMoonNames={hideMoonNames} sliderValue={sliderValue}/>
+        <Moons 
+          key={moon.id} 
+          moon={moon} planetRef={planetRef} 
+          planetXPostion={planetXPostion} 
+          planetZPostion={planetZPostion} 
+          hideMoonNames={hideMoonNames} 
+          sliderValue={sliderValue}
+        />
       ))}
     </>
   );
 }
 
+//creates the ring around the planets
+function Rings({planetXPostion, planetZPostion, size, color}){
+    
+  const ringRef = React.useRef();   
+  useFrame(() => {  
+    ringRef.current.position.x = planetXPostion;
+    ringRef.current.position.z = planetZPostion;
+    //rotates the ring to be horizontal
+    ringRef.current.rotation.x = 1.57;
+  }); 
 
+  return(
+    <mesh ref={ringRef}>
+      <ringGeometry args={[(size + .2) , size + .8, 32]}/>
+      <meshBasicMaterial color={color} side={THREE.DoubleSide} />
+    </mesh>
+  )
+}
 
 
 //creates the moon and it's orbit line from the given info about that moon 
@@ -164,7 +191,13 @@ function Moons({ moon: { moonColor, moonXRadius, moonZRadius, moonSize, moonSpee
         </Html>
       </mesh>
       {/* we create the orbit line for the moon based on the info from we get passed in */}
-      <Ecliptic xRadius={moonXRadius} zRadius={moonZRadius} color={moonColor} planetXPostion={planetXPostion} planetZPostion={planetZPostion}/>
+      <Ecliptic 
+        xRadius={moonXRadius} 
+        zRadius={moonZRadius} 
+        color={moonColor} 
+        planetXPostion={planetXPostion} 
+        planetZPostion={planetZPostion}
+      />
     </>
   )
 }
