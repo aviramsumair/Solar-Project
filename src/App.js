@@ -74,7 +74,7 @@ function Lights() {
 function Sun() {
   return (
     <mesh>
-      <sphereGeometry args={[8, 32, 32]} />
+      <sphereGeometry args={[12, 32, 32]} />
       {/* we use basic material so we dont have to light it with global illumniation */}
       <meshBasicMaterial color="#E1DC59" />
     </mesh>
@@ -84,7 +84,7 @@ function Sun() {
 
 
 //creates the planet based on the given info and passes in the planet's moon array 
-function Planet({ planet: { color, xRadius, zRadius, size, speed, offset, name, id, moons}, showPlanetNames, hideMoonNames, sliderValue}) {
+function Planet({ planet: { color, xRadius, zRadius, size, speed, offset, name, id, moons, rings}, showPlanetNames, hideMoonNames, sliderValue}) {
   //create a reference to the mesh using React’s useRef hook
   const planetRef = React.useRef(); 
   
@@ -122,12 +122,6 @@ function Planet({ planet: { color, xRadius, zRadius, size, speed, offset, name, 
           <div className={planetAnnotationClass}> {name} </div>
         </Html>
       </mesh>
-      {/* adds rings to a planet */}
-      <Rings 
-        planetXPostion={planetXPostion} 
-        planetZPostion={planetZPostion} 
-        size={size} color={color}
-      />
       {/* maps over the planet's moon arary and adds the moon to the planet and then pass it it's planet's position */}
       {moons.map((moon) => (              
         <Moons 
@@ -139,12 +133,19 @@ function Planet({ planet: { color, xRadius, zRadius, size, speed, offset, name, 
           sliderValue={sliderValue}
         />
       ))}
+      {rings.map((ring) => (
+        <Rings
+          ring={ring}
+          planetXPostion={planetXPostion} 
+          planetZPostion={planetZPostion} 
+        />
+      ))}
     </>
   );
 }
 
 //creates the ring around the planets
-function Rings({planetXPostion, planetZPostion, size, color}){
+function Rings({ ring: { ringColor, ringInnerRadius, ringOuterRadius }, planetXPostion, planetZPostion}){
     
   const ringRef = React.useRef();   
   useFrame(() => {  
@@ -156,8 +157,8 @@ function Rings({planetXPostion, planetZPostion, size, color}){
 
   return(
     <mesh ref={ringRef}>
-      <ringGeometry args={[(size + .2) , size + .8, 32]}/>
-      <meshBasicMaterial color={color} side={THREE.DoubleSide} />
+      <ringGeometry args={[ringInnerRadius , ringOuterRadius, 32]}/>
+      <meshBasicMaterial color={ringColor} side={THREE.DoubleSide}/>
     </mesh>
   )
 }
